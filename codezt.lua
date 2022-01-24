@@ -111,6 +111,7 @@ function run_line(line)
       if(#collect~= 0) then
         if(word == "end") then end_expected = end_expected - 1 end
         if(word == "end" and (end_expected == -1 or collect[1]=="ignore-if" or (collect[1]=="repeat" and end_expected==0))) then
+          --why doesn't repeat work in func
           if(collect[1]=="func") then
             table.remove(collect,1)--func
             functions[table.remove(collect,1)] = split(concat(collect," ")) --without funcname nor end
