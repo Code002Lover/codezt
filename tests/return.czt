@@ -1,0 +1,6 @@
+func test
+return
+"return doesn't work as intended"
+end
+
+test()

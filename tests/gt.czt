@@ -1,0 +1,11 @@
+func bool_ts
+if
+  "true"
+  return
+end
+"false"
+end
+
+0 0 > false == bool_ts() print
+0 1 > true  == bool_ts() print
+1 0 > false == bool_ts() print

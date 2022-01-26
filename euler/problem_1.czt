@@ -1,0 +1,20 @@
+0
+func ara_ara
+  dup 3 % 0 ==
+  over 5 % 0 ==
+  or
+  if
+    switch
+    over
+    +
+    switch
+  end
+  1 +
+  dup 1000 != if
+    ara_ara()
+  end
+end
+
+2
+ara_ara()
+drop print

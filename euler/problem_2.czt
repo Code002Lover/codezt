@@ -1,0 +1,14 @@
+0 1 2
+repeat
+2dup + rot drop
+dup 2 % 0 == if
+  rot switch
+  dup
+  rot
+  +
+  rot
+  rot
+end
+4000000 switch dup rot switch lt
+end
+drop drop print
