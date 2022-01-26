@@ -95,7 +95,6 @@ function run_line(line)
       end
       if(#collect_string ~= 0) then
         collect_string[#collect_string+1]=word
-        info("collecting string",word)
         if(sub(word,#word,#word) == '"' or word=='"' or word==' "') then
           p1 = concat(collect_string," ")
           push({"string",sub(p1,1,#p1-1)})
@@ -110,6 +109,7 @@ function run_line(line)
             functions[table.remove(collect,1)] = split(concat(collect," ")) --without funcname nor end
           end
           if(collect[1]=="repeat") then
+            info("TODO: `repeat` cannot be used inside of `func` for some reason")
             table.remove(collect,1)--repeat
             local code_to_run = split(concat(collect," "))
             collect = {}
@@ -136,13 +136,14 @@ function run_line(line)
           push({"number",tonumber(word)})
         end
       else
+        --gotta make the if-cases easier to read/faster
         if(word=="null" or word=="nil" or word=="undefined" or word=="none") then
           push({"nil","nil"})
         elseif(word=="+") then
           p1 = pop()
           p2 = pop()
           assert(p1[1]==p2[1] and (p2[1]=="number" or p2[1]=="string"),"wrong type on stack: + : ")
-          push({"number",(p1[1]=="number" and p2[1]=="number" and p1[2]+p2[2]) or p1[2]..p2[2]})
+          push({"number",(p1[1]=="number" and p2[1]=="number" and p1[2]+p2[2]) or p1[2]..p2[2]}) --`..` could be changed to a table concat in order for better performance
         elseif(word=="true") then
           push({"bool",true})
         elseif(word=="false") then
@@ -313,6 +314,7 @@ function run_line(line)
         elseif(functions[sub(word,1,#word-2)]) then
           run_line(functions[sub(word,1,#word-2)])
         elseif(functions[word]) then
+          push({"function_ptr",word})
           error("function pointers are not implemented yet")
           --run_line(functions[word])
         else
