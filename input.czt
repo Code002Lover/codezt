@@ -1,10 +1,1 @@
-unsafe_dup null == if
- 0
-end
-++
-dup 100 != if
-"input.czt" include
-end
-
-unsafe_drop
-unsafe_drop
+"hello world" print
