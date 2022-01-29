@@ -58,13 +58,16 @@ function unsafe_pop()
 end
 
 function show_stack()
-  info("number of elements on the stack:",last)
+  local str = {}
+  str[#str+1] = concat({"number of elements on the stack:",last},"\t")
+
   if(last ~= 0) then
-    info("elements on the stack:")
+    str[#str+1] = "elements on the stack:"
     for i=1,last do
-      info("type:",stack[i][1],"value:",stack[i][2])
+      str[#str+1] = concat({"type:",stack[i][1],"value:",stack[i][2]},"\t")
     end
   end
+  print(concat(str,"\n[INFO]"))
 end
 
 local values = {}
@@ -83,6 +86,125 @@ function rshift(x, by)
   return math.floor(x / 2 ^ by)
 end
 
+local word_array = {}
+
+word_array["rot"] = function()
+  p1 = pop()
+  p2 = pop()
+  p3 = pop()
+  push(p2)
+  push(p1)
+  push(p3)
+end
+
+word_array["true"] = function()
+  push({"bool",true})
+end
+
+word_array["false"] = function()
+  push({"bool",false})
+end
+
+word_array["+"] = function()
+  p1 = pop()
+  p2 = pop()
+  assert(p1[1]==p2[1] and (p2[1]=="number" or p2[1]=="string"),"wrong type on stack: + : ")
+  push({"number",(p1[1]=="number" and p2[1]=="number" and p2[2]+p1[2]) or p2[2]..p1[2]}) --`..` could be changed to a table concat in order for better performance
+end
+
+word_array["--"] = function()
+  p1 = pop()
+  assert(p1[1]=="number","wrong type on stack: -- : ")
+  push({"number",p1[2]-1})
+end
+
+word_array["++"] = function()
+  p1 = pop()
+  assert(p1[1]=="number","wrong type on stack: ++ : ")
+  push({"number",p1[2]+1})
+end
+
+word_array["-"] = function()
+  p1 = pop()
+  p2 = pop()
+  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: - : ")
+  push({"number",p2[2]-p1[2]})
+end
+
+word_array[">"] = function()
+  p1 = pop()
+  p2 = pop()
+  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: > : ")
+  push({"bool",p2[2]>p1[2]})
+end
+word_array["gt"] = word_array[">"]
+
+word_array["<"] = function()
+  p1 = pop()
+  p2 = pop()
+  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: < : ")
+  push({"bool",p2[2]<p1[2]})
+end
+word_array["lt"] = word_array["<"]
+
+word_array["/"] = function()
+  p1 = pop()
+  p2 = pop()
+  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: / : ")
+  push({"number",p2[2]/p1[2]})
+end
+
+word_array["/*"] = function()
+  p1 = pop()
+  p2 = pop()
+  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: /* : ")
+  push({"number",p2[2]*(1/p1[2])})
+end
+word_array["div"] = word_array["/*"]
+
+word_array["%"] = function()
+  p1 = pop()
+  p2 = pop()
+  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: % : ")
+  push({"number",p2[2]%p1[2]})
+end
+
+word_array["*"] = function()
+  p1 = pop()
+  p2 = pop()
+  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: * : ")
+  push({"number",p2[2]*p1[2]})
+end
+
+word_array["<<"] = function()
+  p1 = pop()
+  p2 = pop()
+  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: << : ")
+  push({"number",lshift(p2[2],p1[2])})
+end
+
+word_array[">>"] = function()
+  p1 = pop()
+  p2 = pop()
+  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: >> : ")
+  push({"number",rshift(p2[2],p1[2])})
+end
+
+word_array["call"] = function()
+  p1 = pop()
+  assert(p1[1]=="function_ptr","wrong type on stack: call : ")
+  run_line(functions[p1[2]])
+end
+
+word_array["end"] = function()
+  error("unknown `end` found")
+end
+
+--[[
+
+
+
+]]
 
 function run_line(line)
   for i=1,#line+1 do
@@ -116,9 +238,9 @@ function run_line(line)
             p2 = nil
             repeat
               run_line(code_to_run)
-              p2 = pop() --{type,value}
+              p2 = pop()
               assert(p2[1]=="bool","top of the stack after a `repeat` must be of type boolean")
-            until p2[2]~=true--why no fucking work
+            until p2[2]~=true
           end
           collect = {}
         else
@@ -134,20 +256,13 @@ function run_line(line)
           set_value = false
         else
           push({"number",tonumber(word)})
+          --TODO: add support for huge numbers, or at least handle them as strings (BigNum)
         end
       else
-        --gotta make the if-cases easier to read/faster
-        if(word=="null" or word=="nil" or word=="undefined" or word=="none") then
+        if(word_array[word])then
+          word_array[word]()
+        elseif(word=="null" or word=="nil" or word=="undefined" or word=="none") then
           push({"nil","nil"})
-        elseif(word=="+") then
-          p1 = pop()
-          p2 = pop()
-          assert(p1[1]==p2[1] and (p2[1]=="number" or p2[1]=="string"),"wrong type on stack: + : ")
-          push({"number",(p1[1]=="number" and p2[1]=="number" and p1[2]+p2[2]) or p1[2]..p2[2]}) --`..` could be changed to a table concat in order for better performance
-        elseif(word=="true") then
-          push({"bool",true})
-        elseif(word=="false") then
-          push({"bool",false})
         elseif(sub(word,1,1)=='"' and sub(word,#word,#word) ~= '"') then
           collect_string = {sub(word,2,#word+1)}
         elseif(sub(word,1,1)=='"' and sub(word,#word,#word) == '"') then
@@ -158,61 +273,6 @@ function run_line(line)
           push({"table",headers})
           push({"number",code})
           push({"string",body})
-        elseif(word=="-") then
-          p1 = pop()
-          p2 = pop()
-          assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: - : ")
-          push({"number",p1[2]-p2[2]})
-        elseif(word=="--") then
-          p1 = pop()
-          assert(p1[1]=="number","wrong type on stack: -- : ")
-          push({"number",p1[2]-1})
-        elseif(word=="++") then
-          p1 = pop()
-          assert(p1[1]=="number","wrong type on stack: ++ : ")
-          push({"number",p1[2]+1})
-        elseif(word=="rot") then
-          p1 = pop()
-          p2 = pop()
-          p3 = pop()
-          push(p2)
-          push(p1)
-          push(p3)
-        elseif(word==">" or word=="gt") then
-          p1 = pop()
-          p2 = pop()
-          assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: > : ")
-          push({"bool",p1[2]>p2[2]})
-        elseif(word=="<" or word=="lt") then
-          p1 = pop()
-          p2 = pop()
-          assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: < : ")
-          push({"bool",p1[2]<p2[2]})
-        elseif(word==">>") then
-          p1 = pop()
-          p2 = pop()
-          assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: >> : ")
-          push({"number",rshift(p1[2],p2[2])})
-        elseif(word=="<<") then
-          p1 = pop()
-          p2 = pop()
-          assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: << : ")
-          push({"number",lshift(p1[2],p2[2])})
-        elseif(word=="*") then
-          p1 = pop()
-          p2 = pop()
-          assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: * : ")
-          push({"number",p1[2]*p2[2]})
-        elseif(word=="/") then
-          p1 = pop()
-          p2 = pop()
-          assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: / : ")
-          push({"number",p1[2]/p2[2]})
-        elseif(word=="%") then
-          p1 = pop()
-          p2 = pop()
-          assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: % : ")
-          push({"number",p2[2]%p1[2]})
         elseif(word=="dup") then
           p1 = pop()
           push(p1)
@@ -315,8 +375,6 @@ function run_line(line)
           run_line(functions[sub(word,1,#word-2)])
         elseif(functions[word]) then
           push({"function_ptr",word})
-          error("function pointers are not implemented yet")
-          --run_line(functions[word])
         else
           last_word = word
         end
@@ -350,7 +408,5 @@ end
 local start = os.clock()
 run_file(input_file)
 info(os.clock()-start,"s to run the program")
-
-warn("TODO: add support for huge numbers, or at least handle them as strings (BigNum)")
 
 io.close(input_file)
