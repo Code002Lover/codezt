@@ -1,0 +1,5 @@
+func test
+  "word `call` works" print
+end
+
+test call
