@@ -352,18 +352,20 @@ word_array["clear"] = function()
   last=0
 end
 
-word_array["func"] == function()
+word_array["func"] = function()
   collect = {"func"}
 end
 
-word_array["repeat"] == function()
+word_array["repeat"] = function()
   collect = {"repeat"}
+end
 
 word_array["if"] = function()
   p1 = pop()
-  if(not (p1[2]==true and p1[1]=="bool")) then --can you simplify this
-    collect = {"ignore-if"}
-  end
+  -- if(not (p1[2]==true and p1[1]=="bool")) then
+  --   collect = {"ignore-if"}
+  -- end
+  collect = (not(p1[2]==true and p1[1]=="bool") and {"ignore-if"}) or {}
 end
 
 word_array["include"] = function()
@@ -408,13 +410,12 @@ function run_line(line)
       end
       if(#collect~= 0) then
         if(word == "end") then end_expected = end_expected - 1 end
-        if(word == "end" and (end_expected == -1 or collect[1]=="ignore-if")) then
+        if(word == "end" and ((end_expected == -1 and collect[1] == "func") or (collect[1]=="ignore-if") or (collect[1]=="repeat"))) then
           if(collect[1]=="func") then
             table.remove(collect,1)--func
             functions[table.remove(collect,1)] = split(concat(collect," ")) --without funcname nor end
           end
           if(collect[1]=="repeat") then
-            info("TODO: `repeat` cannot be used inside of `func` for some reason")
             table.remove(collect,1)--repeat
             local code_to_run = split(concat(collect," "))
             collect = {}
@@ -427,7 +428,7 @@ function run_line(line)
           end
           collect = {}
         else
-          if(word == "if") then
+          if(word == "if" or word=="repeat") then
             end_expected = end_expected + 1
           end
           collect[#collect+1]=word
@@ -444,8 +445,6 @@ function run_line(line)
       else
         if(word_array[word])then
           word_array[word]()
-        elseif(word=="null" or word=="nil" or word=="undefined" or word=="none") then
-          push({"nil","nil"})
         elseif(sub(word,1,1)=='"' and sub(word,#word,#word) ~= '"') then
           collect_string = {sub(word,2,#word+1)}
         elseif(sub(word,1,1)=='"' and sub(word,#word,#word) == '"') then
