@@ -413,7 +413,8 @@ function run_line(line)
         if(word == "end" and ((end_expected == -1 and collect[1] == "func") or (collect[1]=="ignore-if") or (collect[1]=="repeat"))) then
           if(collect[1]=="func") then
             table.remove(collect,1)--func
-            functions[table.remove(collect,1)] = split(concat(collect," ")) --without funcname nor end
+            p1 = table.remove(collect,1)
+            functions[p1] = split(concat(collect," ")) --without funcname nor end
           end
           if(collect[1]=="repeat") then
             table.remove(collect,1)--repeat
@@ -427,6 +428,7 @@ function run_line(line)
             until p2[2]~=true
           end
           collect = {}
+          end_expected = 0
         else
           if(word == "if" or word=="repeat") then
             end_expected = end_expected + 1
