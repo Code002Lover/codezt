@@ -1,0 +1,9 @@
+func f end
+
+"true"
+true
+nil
+0
+f
+
+clear
