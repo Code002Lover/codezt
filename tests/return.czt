@@ -1,6 +1,8 @@
 func test
+"return is working as expected"
 return
-"return doesn't work as intended"
+drop "return doesn't work as intended"
 end
 
-test()
+test call
+print
