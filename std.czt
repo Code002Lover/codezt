@@ -1,0 +1,8 @@
+func ifelse
+  if
+    call
+    drop
+    return
+  end
+  drop call
+end

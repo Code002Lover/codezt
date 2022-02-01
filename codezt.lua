@@ -385,6 +385,11 @@ word_array["write"] = function()
   io.stdout:write(pop()[2])
 end
 
+word_array["#std"] = function()
+  push({"string","std.czt"})
+  word_array["include"]()
+end
+
 --[[
 
 

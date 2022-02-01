@@ -1,0 +1,13 @@
+#std
+func yes
+  "true" print
+end
+
+func no
+  "false" print
+end
+
+no
+yes
+true
+ifelse()
