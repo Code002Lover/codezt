@@ -1,8 +1,19 @@
 func ifelse
   if
+    switch drop
     call
-    drop
     return
   end
   drop call
+end
+
+func true_str "true" end
+func false_str "false" end
+
+
+func bool_tostring
+  false_str
+  true_str
+  rot
+  ifelse()
 end
