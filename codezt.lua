@@ -390,6 +390,10 @@ word_array["#std"] = function()
   word_array["include"]()
 end
 
+word_array["type"] = function()
+  push({"string",unsafe_pop()[1]})
+end
+
 --[[
 
 
