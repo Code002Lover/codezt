@@ -1,3 +1,6 @@
+//yes I know all of this could be done in codezt.lua
+//I just thought it might be cool to have these here and learn what features I'd need to add
+
 func ifelse
   if
     switch drop
@@ -5,15 +8,4 @@ func ifelse
     return
   end
   drop call
-end
-
-func true_str "true" end
-func false_str "false" end
-
-
-func bool_tostring
-  false_str
-  true_str
-  rot
-  ifelse()
 end
