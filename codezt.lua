@@ -192,6 +192,7 @@ word_array["<<"] = function()
   assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: << : ")
   push({"number",lshift(p2[2],p1[2])})
 end
+word_array["lsf"] = word_array["<<"]
 
 word_array[">>"] = function()
   p1 = pop()
@@ -199,6 +200,7 @@ word_array[">>"] = function()
   assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: >> : ")
   push({"number",rshift(p2[2],p1[2])})
 end
+word_array["rsf"] = word_array[">>"]
 
 word_array["call"] = function()
   p1 = pop()
@@ -392,6 +394,10 @@ end
 
 word_array["type"] = function()
   push({"string",unsafe_pop()[1]})
+end
+
+word_array["tostring"] = function()
+  push({"string",tostring(unsafe_pop()[2])})
 end
 
 --[[
