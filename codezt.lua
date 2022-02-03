@@ -28,12 +28,7 @@ function print(...)
 end
 
 local args = arg
-local input_filename
-for i,v in pairs(args) do
-  if(v == "-i") then
-    input_filename = args[i+1]
-  end
-end
+local input_filename = args[1]
 
 assert(input_filename~=nil,"no input filename specified (hint: -i)")
 
