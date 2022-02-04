@@ -113,7 +113,6 @@ end
 word_array["+"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1]==p2[1] and (p2[1]=="number" or p2[1]=="string"),"wrong type on stack: + : ")
   push({"number",(p1[1]=="number" and p2[1]=="number" and p2[2]+p1[2]) or p2[2]..p1[2]}) --`..` could be changed to a table concat in order for better performance
 end
 
@@ -357,6 +356,8 @@ word_array["repeat"] = function()
   collect = {"repeat"}
 end
 
+word_array["ifl"] = word_array["repeat"]
+
 word_array["if"] = function()
   p1 = pop()
   -- if(not (p1[2]==true and p1[1]=="bool")) then
@@ -401,6 +402,12 @@ end
 
 ]]
 
+function handle_string(str)
+  str = tostring(string.gsub(str,"\\n","\n"))
+  str = tostring(string.gsub(str,"\\t","\t"))
+  push({"string",str})
+end
+
 function run_line(line)
   for i=1,#line+1 do
     if(line[i] == " " or line[i]==nil or line[i]=="\n" or line[i]=="\t" or line[i]=="" or line[i]==";") then
@@ -414,7 +421,7 @@ function run_line(line)
         collect_string[#collect_string+1]=word
         if(sub(word,#word,#word) == '"' or word=='"' or word==' "') then
           p1 = concat(collect_string," ")
-          push({"string",sub(p1,1,#p1-1)})
+          handle_string(sub(str,1,#str-1))
           collect_string = {}
         end
       end
@@ -460,7 +467,7 @@ function run_line(line)
         elseif(sub(word,1,1)=='"' and sub(word,#word,#word) ~= '"') then
           collect_string = {sub(word,2,#word+1)}
         elseif(sub(word,1,1)=='"' and sub(word,#word,#word) == '"') then
-            push({"string",sub(word,2,#word-1)})
+            handle_string(sub(word,2,#word-1))
         elseif(sub(word,1,2)=="//" or word=="return") then
           break
         elseif(functions[sub(word,1,#word-2)]) then
