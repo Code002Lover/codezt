@@ -9,3 +9,8 @@ func ifelse
   end
   drop call
 end
+
+//legit just prints a newline to stdout
+func nl
+  "\n" write
+end
