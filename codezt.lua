@@ -405,6 +405,10 @@ end
 function handle_string(str)
   str = tostring(string.gsub(str,"\\n","\n"))
   str = tostring(string.gsub(str,"\\t","\t"))
+  str = tostring(string.gsub(str,"\\r","\r"))
+  str = tostring(string.gsub(str,"\\a","\a"))
+  str = tostring(string.gsub(str,"\\b","\b"))
+  str = tostring(string.gsub(str,"\\v","\v"))
   push({"string",str})
 end
 
