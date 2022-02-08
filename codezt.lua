@@ -309,7 +309,7 @@ word_array["luft"] = word_array["null"]
 word_array["and"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1] == "bool" and p2[1] == p1[1],"'not' is only usable with type 'bool'")
+  assert(p1[1] == "bool" and p2[1] == p1[1],"'and' is only usable with type 'bool'")
   push({"bool",p1[2]and p2[2]})
 end
 word_array["&&"] = word_array["and"]
@@ -317,7 +317,7 @@ word_array["&&"] = word_array["and"]
 word_array["or"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1] == "bool" and p2[1] == p1[1],"'not' is only usable with type 'bool'")
+  assert(p1[1] == "bool" and p2[1] == p1[1],"'or' is only usable with type 'bool'")
   push({"bool",p1[2]or p2[2]})
 end
 
@@ -396,11 +396,18 @@ word_array["tostring"] = function()
   push({"string",tostring(unsafe_pop()[2])})
 end
 
---[[
+word_array["sqrt"] = function()
+  p1 = pop()
+  assert(p1[1]=="number","'sqrt' is only usable with a number")
+  push({"number"},math.pow(p1[2],0.5))
+end
 
-
-
-]]
+word_array["pow"] = function()
+  p1 = pop()
+  p2 = pop()
+  assert(p1[1]=="number" and p1[1] == p2[1],"'pow' is only usable with numbers")
+  push({"number"},math.pow(p2[2],p1[2]))
+end
 
 function handle_string(str)
   str = tostring(string.gsub(str,"\\n","\n"))
