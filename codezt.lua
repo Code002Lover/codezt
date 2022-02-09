@@ -53,9 +53,13 @@ function push(t)
   last = last + 1
   stack[last]=t
 end
-function pop()
+function pop(position)
   assert(last~=0,"no items to pop from stack")
+  assert(position==nil or last >= position,"not enough items on the stack")
   last = last - 1
+  if(position ~= nil) then
+    return table.remove(stack, position)
+  end
   return stack[last+1] or {"nil","nil"}
 end
 function unsafe_pop()
@@ -265,6 +269,14 @@ end
 word_array["unsafe_dup"] = function()
   push(unsafe_pop())
   word_array["dup"]()
+end
+
+word_array["on-stack"] = function()
+  p1 = pop()
+  assert(p1[1]=="number","'on-stack' can only be used with tyüe `number`")
+  local index = p1[2]
+  index = #stack - index --we want to get the element from the top of the stack, not the bottom
+  push(pop(index))
 end
 
 word_array["over"] = function()
