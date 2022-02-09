@@ -98,12 +98,8 @@ end
 local word_array = {}
 
 word_array["rot"] = function()
-  p1 = pop()
-  p2 = pop()
-  p3 = pop()
-  push(p2)
-  push(p1)
-  push(p3)
+  push({"number",3})
+  word_array["on-stack"]()
 end
 
 word_array["true"] = function()
