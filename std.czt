@@ -14,3 +14,11 @@ end
 func nl
   "\n" write
 end
+
+func square
+  2 pow
+end
+
+func sqr
+  square()
+end
