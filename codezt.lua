@@ -102,6 +102,31 @@ word_array["rot"] = function()
   word_array["on-stack"]()
 end
 
+word_array["change-type"] = function()
+  p1 = pop() --type to set to
+  p2 = pop() --element to change
+  assert(p1[1]=="string","'change-type' must be called with a string on the top of the stack")
+  p1 = p1[2] --for easier access to the string
+  assert(types[p1]~=nil,"type to change to must be a valid type")
+  assert(p1 ~= "table","cannot change to type 'table'")
+  assert(p1 ~= "nil","cannot change to type 'nil'")
+  assert(p2[1]~="nil","cannot change nil to another type")
+  assert(p2[1]~="table","cannot change table to another type")
+  if(p1 == "number") then
+    assert(tonumber(p2[2]) ~= nil,"types are not compatible")
+    p2[2] = tonumber(p2[2])
+  end
+  if(p1 == "string" or p1=="function_ptr") then
+    p2[2] = tostring(p2[2])
+  end
+  if(p1 == "bool") then
+    assert(p2[2] == "true" or p2[2] == "false","types are not compatible")
+    p2[2] = p2[2]=="true" --shortcut to parse a string to a boolean
+  end
+  p2[1] = p1 --change internal type to match that of the value
+  push(p2)
+end
+
 word_array["true"] = function()
   push({"bool",true})
 end
