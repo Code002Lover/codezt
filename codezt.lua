@@ -440,7 +440,8 @@ word_array["type"] = function()
 end
 
 word_array["tostring"] = function()
-  push({"string",tostring(unsafe_pop()[2])})
+  push({"string","string"})
+  word_array["change-type"]()
 end
 
 word_array["sqrt"] = function()
