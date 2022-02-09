@@ -263,9 +263,8 @@ word_array["dup"] = function()
 end
 
 word_array["unsafe_dup"] = function()
-  p1 = unsafe_pop()
-  push(p1)
-  push(p1)
+  push(unsafe_pop())
+  word_array["dup"]()
 end
 
 word_array["over"] = function()
