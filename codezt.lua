@@ -116,6 +116,24 @@ word_array["+"] = function()
   push({"number",(p1[1]=="number" and p2[1]=="number" and p2[2]+p1[2]) or p2[2]..p1[2]}) --`..` could be changed to a table concat in order for better performance
 end
 
+word_array["add"] = function()
+  p1 = pop()
+  if(p1[1]=="number" or p1[1] == "string") then
+    push(p1)
+    word_array["+"]()
+    return
+  end
+  assert(p1[1]=="table","'add' can only be used with types: `number` `string` `table`")
+  p2 = pop()
+  p1[2][#p1[2]+1] = p2
+  push(p1)
+end
+
+word_array["{}"] = function()
+  push({"table",{}})
+end
+word_array["[]"] = word_array["{}"]
+
 word_array["--"] = function()
   p1 = pop()
   assert(p1[1]=="number","wrong type on stack: -- : ")
@@ -224,6 +242,12 @@ end
 
 word_array["print"] = function()
   p1 = pop()
+  if(p1[1]=="table") then
+    for i=1,#p1[2] do
+      print(p1[2][i][2])
+    end
+    return
+  end
   print(p1[2])
 end
 
@@ -300,11 +324,7 @@ word_array["null"] = function()
 end
 word_array["nil"] = word_array["null"]
 word_array["undefined"] = word_array["null"]
-word_array["nix"] = word_array["null"]
-word_array["leer"] = word_array["null"]
-word_array["zerotwonotfound"] = word_array["null"]
-word_array["no"] = word_array["null"]
-word_array["luft"] = word_array["null"]
+word_array["nothing"] = word_array["null"]
 
 word_array["and"] = function()
   p1 = pop()
@@ -322,7 +342,6 @@ word_array["or"] = function()
 end
 
 word_array["!!"] = show_stack
---smirk
 
 word_array["switch"] = function()
   p1 = pop()
@@ -360,9 +379,6 @@ word_array["ifl"] = word_array["repeat"]
 
 word_array["if"] = function()
   p1 = pop()
-  -- if(not (p1[2]==true and p1[1]=="bool")) then
-  --   collect = {"ignore-if"}
-  -- end
   collect = (not(p1[2]==true and p1[1]=="bool") and {"ignore-if"}) or {}
 end
 
