@@ -252,9 +252,8 @@ word_array["print"] = function()
 end
 
 word_array["debug"] = function()
-  p1 = pop()
-  print(p1[2])
-  push(p1)
+  word_array["dup"]()
+  word_array["print"]()
 end
 
 word_array["dup"] = function()
