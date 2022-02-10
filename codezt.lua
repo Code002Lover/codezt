@@ -30,11 +30,12 @@ end
 local args = arg
 local input_filename = args[1]
 
-assert(input_filename~=nil,"no input filename specified (hint: -i)")
-
-local input_file = io.open(input_filename,"r")
-
-io.input(input_file)
+assert(input_filename~=nil,"no input filename specified")
+local input_file
+if(input_filename~="dump_words") then
+  input_file = io.open(input_filename,"r")
+  io.input(input_file)
+end
 
 local types = {
   ["nil"          ] = true,
@@ -557,7 +558,14 @@ function run_file(file)
     run_line(line)
   end
 end
-
+if(input_filename == "dump_words") then
+  local t = {}
+  for i,v in pairs(word_array) do
+    t[#t+1]=i
+  end
+  print(table.concat(t, "|"))
+  return
+end
 local start = os.clock()
 run_file(input_file)
 if(last ~= 0) then
