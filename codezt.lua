@@ -565,6 +565,6 @@ if(last ~= 0) then
   warn("stack:")
   show_stack()
 end --after all files ran (even imports)
-info(os.clock()-start,"s to run the program")
+info(os.clock()-start.."s to run the program")
 
 io.close(input_file)
