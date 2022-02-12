@@ -305,7 +305,7 @@ end
 
 word_array["on-stack"] = function()
   p1 = pop()
-  assert(p1[1]=="number","'on-stack' can only be used with tyüe `number`")
+  assert(p1[1]=="number","'on-stack' can only be used with type `number`")
   local index = p1[2]
   index = #stack - index --we want to get the element from the top of the stack, not the bottom
   push(pop(index))
