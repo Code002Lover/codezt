@@ -38,9 +38,10 @@ io.input(input_file)
 local stack = {}
 local lastelement = nil
 
-function pop()
-  return table.remove(stack, #stack)
+function pop(position)
+  return table.remove(stack, position or #stack)
 end
+unsafe_pop = pop
 
 function push(str)
   stack[#stack+1] = str
@@ -82,8 +83,29 @@ word_array["clear"] = function()
   stack={}
 end
 
-word_array["drop"] = function()
-  pop()
+word_array["drop"] = pop
+
+word_array["on-stack"] = function()
+  p1 = pop()
+  index = #stack - tonumber(p1) --we want to get the element from the top of the stack, not the bottom
+  push(pop(index))
+end
+
+word_array["over"] = function()
+  p1 = pop()
+  p2 = pop()
+  push(p2)
+  push(p1)
+  push(p2)
+end
+
+word_array["2dup"] = function()
+  p1 = pop()
+  p2 = pop()
+  push(p2)
+  push(p1)
+  push(p2)
+  push(p1)
 end
 
 local line = ""
@@ -106,7 +128,7 @@ while line ~= nil do
     word = words[i]
     info("encountered `"..word.."`")
     if(tonumber(word)~=nil) then
-      stack[#stack+1]=tonumber(word)
+      push(word)
     elseif(word_array[word]~=nil) then
       word_array[word](word)
     elseif(locals[word]~=nil) then
