@@ -15,7 +15,7 @@ local linecount = 0
 local i = 0
 function error(...)
   pri_ptr("[ERROR]",...)
-  err_ptr("",1)
+  os.exit(1)
 end
 function info(...)
   pri_ptr("[INFO]",...)
