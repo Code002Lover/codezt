@@ -96,12 +96,23 @@ function rshift(x, by)
   return math.floor(x / 2 ^ by)
 end
 
+function checktype(tocheck,expected,word_error,custom_error)
+  if(type(tocheck)=="table") then
+    return checktype(tocheck[1],expected,error_msg)
+  end
+  if(tocheck~=expected) then
+    if(custom_error) then
+      return error(word_error)
+    end
+    error(concat({"`",word_error,"` expects type `",expected,"` but got type `",tocheck,"`"}))
+  end
+end
 
 local word_array = {}
 
 word_array["exit"] = function()
   p1 = pop()
-  assert(p1[1]=="number","you can only exit with a number")
+  checktype(p1,"number","exit")
   os.exit(p1[2])
 end
 word_array["rot"] = function()
@@ -112,7 +123,7 @@ end
 word_array["change-type"] = function()
   p1 = pop() --type to set to
   p2 = pop() --element to change
-  assert(p1[1]=="string","'change-type' must be called with a string on the top of the stack")
+  checktype(p1,"string","change-type")
   p1 = p1[2] --for easier access to the string
   assert(types[p1]~=nil,"type to change to must be a valid type")
   assert(p1 ~= "table","cannot change to type 'table'")
@@ -168,27 +179,29 @@ word_array["[]"] = word_array["{}"]
 
 word_array["--"] = function()
   p1 = pop()
-  assert(p1[1]=="number","wrong type on stack: -- : ")
+  checktype(p1,"number","--")
   push({"number",p1[2]-1})
 end
 
 word_array["++"] = function()
   p1 = pop()
-  assert(p1[1]=="number","wrong type on stack: ++ : ")
+  checktype(p1,"number","++")
   push({"number",p1[2]+1})
 end
 
 word_array["-"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: - : ")
+  checktype(p1,"number","-")
+  checktype(p2,"number","-")
   push({"number",p2[2]-p1[2]})
 end
 
 word_array[">"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: > : ")
+  checktype(p1,"number",">")
+  checktype(p2,"number",">")
   push({"bool",p2[2]>p1[2]})
 end
 word_array["gt"] = word_array[">"]
@@ -196,7 +209,8 @@ word_array["gt"] = word_array[">"]
 word_array["<"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: < : ")
+  checktype(p1,"number","<")
+  checktype(p2,"number","<")
   push({"bool",p2[2]<p1[2]})
 end
 word_array["lt"] = word_array["<"]
@@ -204,14 +218,16 @@ word_array["lt"] = word_array["<"]
 word_array["/"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: / : ")
+  checktype(p1,"number","/")
+  checktype(p2,"number","/")
   push({"number",p2[2]/p1[2]})
 end
 
 word_array["/*"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: /* : ")
+  checktype(p1,"number","/*")
+  checktype(p2,"number","/*")
   push({"number",p2[2]*(1/p1[2])})
 end
 word_array["div"] = word_array["/*"]
@@ -219,21 +235,24 @@ word_array["div"] = word_array["/*"]
 word_array["%"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: % : ")
+  checktype(p1,"number","%")
+  checktype(p2,"number","%")
   push({"number",p2[2]%p1[2]})
 end
 
 word_array["*"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: * : ")
+  checktype(p1,"number","*")
+  checktype(p2,"number","*")
   push({"number",p2[2]*p1[2]})
 end
 
 word_array["<<"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: << : ")
+  checktype(p1,"number","<<")
+  checktype(p2,"number","<<")
   push({"number",lshift(p2[2],p1[2])})
 end
 word_array["lsf"] = word_array["<<"]
@@ -241,14 +260,15 @@ word_array["lsf"] = word_array["<<"]
 word_array[">>"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1]==p2[1] and p2[1]=="number","wrong type on stack: >> : ")
+  checktype(p1,"number",">>")
+  checktype(p2,"number",">>")
   push({"number",rshift(p2[2],p1[2])})
 end
 word_array["rsf"] = word_array[">>"]
 
 word_array["call"] = function()
   p1 = pop()
-  assert(p1[1]=="function_ptr","wrong type on stack: call : ")
+  checktype(p1,"function_ptr","call")
   run_line(functions[p1[2]])
 end
 
@@ -301,7 +321,7 @@ end
 
 word_array["on-stack"] = function()
   p1 = pop()
-  assert(p1[1]=="number","'on-stack' can only be used with type `number`")
+  checktype(p1,"number","on-stack")
   local index = p1[2]
   index = #stack - index --we want to get the element from the top of the stack, not the bottom
   push(pop(index))
@@ -352,7 +372,7 @@ word_array["~=="] = word_array["!=="]
 
 word_array["not"] = function()
   p1 = pop()
-  assert(p1[1] == "bool","'not' is only usable with type 'bool'")
+  checktype(p1,"bool","not")
   push({"bool",not p1[2]})
 end
 word_array["!"] = word_array["not"]
@@ -367,7 +387,8 @@ word_array["nothing"] = word_array["null"]
 word_array["and"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1] == "bool" and p2[1] == p1[1],"'and' is only usable with type 'bool'")
+  checktype(p1,"bool","and")
+  checktype(p2,"bool","and")
   push({"bool",p1[2]and p2[2]})
 end
 word_array["&&"] = word_array["and"]
@@ -375,7 +396,8 @@ word_array["&&"] = word_array["and"]
 word_array["or"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1] == "bool" and p2[1] == p1[1],"'or' is only usable with type 'bool'")
+  checktype(p1,"bool","or")
+  checktype(p2,"bool","or")
   push({"bool",p1[2]or p2[2]})
 end
 
@@ -417,13 +439,13 @@ word_array["ifl"] = word_array["repeat"]
 
 word_array["if"] = function()
   p1 = pop()
-  assert(p1[1]=="bool","`if` expects type `bool` on top of the stack")
+  checktype(p1,"bool","if")
   collect = (not(p1[2]==true) and {"ignore-if"}) or {}
 end
 
 word_array["include"] = function()
   p1 = pop()
-  assert(p1[1]=="string","when including files, top of the stack must be a string")
+  checktype(p1,"string","include")
   local included_file = io.open(p1[2],"r")
   run_file(included_file)
 end
@@ -454,14 +476,15 @@ end
 
 word_array["sqrt"] = function()
   p1 = pop()
-  assert(p1[1]=="number","'sqrt' is only usable with a number")
+  checktype(p1,"number","sqrt")
   push({"number"},math.pow(p1[2],0.5))
 end
 
 word_array["pow"] = function()
   p1 = pop()
   p2 = pop()
-  assert(p1[1]=="number" and p1[1] == p2[1],"'pow' is only usable with numbers")
+  checktype(p1,"number","pow")
+  checktype(p2,"number","pow")
   push({"number"},math.pow(p2[2],p1[2]))
 end
 
@@ -508,7 +531,7 @@ function run_line(line)
             repeat
               run_line(code_to_run)
               p2 = pop()
-              assert(p2[1]=="bool","top of the stack after a `repeat` must be of type boolean")
+              checktype(p2,"bool","top of the stack after a `repeat` must be of type boolean",true)
             until p2[2]~=true
           end
           collect = {}
