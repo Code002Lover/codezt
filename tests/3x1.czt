@@ -1,0 +1,36 @@
+#std
+
+func odd
+3 * ++
+end
+
+func even
+2 /
+end
+
+func step
+dup 2 % 0 ==
+odd
+even
+rot
+ifelse()
+dup 1 == if
+  false
+  return
+end
+true
+end
+
+func 3x1
+  debug
+  repeat
+    step() switch debug switch
+  end
+  drop
+end
+
+"please input a number to test:" write
+read
+"number" change-type
+"output:" print
+3x1()
