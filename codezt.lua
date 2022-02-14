@@ -491,7 +491,7 @@ function run_line(line)
         collect_string[#collect_string+1]=word
         if(sub(word,#word,#word) == '"' or word=='"' or word==' "') then
           p1 = concat(collect_string," ")
-          handle_string(sub(str,1,#str-1))
+          handle_string(sub(p1,1,#p1-1))
           collect_string = {}
         end
       end
