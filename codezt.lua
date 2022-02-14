@@ -421,7 +421,8 @@ word_array["ifl"] = word_array["repeat"]
 
 word_array["if"] = function()
   p1 = pop()
-  collect = (not(p1[2]==true and p1[1]=="bool") and {"ignore-if"}) or {}
+  assert(p1[1]=="bool","`if` expects type `bool` on top of the stack")
+  collect = (not(p1[2]==true) and {"ignore-if"}) or {}
 end
 
 word_array["include"] = function()
