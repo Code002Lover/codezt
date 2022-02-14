@@ -96,16 +96,12 @@ function rshift(x, by)
   return math.floor(x / 2 ^ by)
 end
 
-local debug_exitcode = false --log when you exit with a non-zero exitcode through `exit`
 
 local word_array = {}
 
 word_array["exit"] = function()
   p1 = pop()
   assert(p1[1]=="number","you can only exit with a number")
-  if(p1[2]~=0 and debug_exitcode) then
-    warn("exiting with a non-zero exit code")
-  end
   os.exit(p1[2])
 end
 word_array["rot"] = function()
