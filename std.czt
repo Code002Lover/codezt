@@ -22,3 +22,7 @@ end
 func sqr
   square()
 end
+
+func isEven
+  dup 2 % 0 ==
+end
