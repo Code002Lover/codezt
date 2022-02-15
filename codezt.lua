@@ -97,8 +97,9 @@ function rshift(x, by)
 end
 
 function checktype(tocheck,expected,word_error,custom_error)
+  assert(tocheck~=nil and expected~=nil and word_error~=nil,"checktype expects arguments")
   if(type(tocheck)=="table") then
-    return checktype(tocheck[1],expected,error_msg)
+    return checktype(tocheck[1],expected,word_error,custom_error)
   end
   if(tocheck~=expected) then
     if(custom_error) then
