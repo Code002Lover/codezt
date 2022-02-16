@@ -436,6 +436,10 @@ word_array["repeat"] = function()
   collect = {"repeat"}
 end
 
+word_array["fourloop"] = function()
+  collect = {"fourloop"}
+end
+
 word_array["ifl"] = word_array["repeat"]
 
 word_array["if"] = function()
@@ -518,11 +522,19 @@ function run_line(line)
       end
       if(#collect~= 0) then
         if(word == "end") then end_expected = end_expected - 1 end
-        if(word == "end" and ((end_expected == -1 and collect[1] == "func") or (collect[1]=="ignore-if") or (collect[1]=="repeat"))) then
+        if(word == "end" and ((end_expected == -1 and collect[1] == "func") or (collect[1]=="ignore-if") or (collect[1]=="repeat" or collect[1]=="fourloop"))) then
           if(collect[1]=="func") then
             table.remove(collect,1)--func
             p1 = table.remove(collect,1)
             functions[p1] = split(concat(collect," ")) --without funcname nor end
+          end
+          if(collect[1]=="fourloop") then
+            table.remove(collect,1)--fourloop
+            local code_to_run = split(concat(collect," "))
+            collect = {}
+            for i=1,4 do
+              run_line(code_to_run)
+            end
           end
           if(collect[1]=="repeat") then
             table.remove(collect,1)--repeat
