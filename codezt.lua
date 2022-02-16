@@ -550,7 +550,7 @@ function run_line(line)
           collect = {}
           end_expected = 0
         else
-          if(word == "if" or word=="repeat") then
+          if(word == "if" or word=="repeat" or word=="fourloop") then
             end_expected = end_expected + 1
           end
           collect[#collect+1]=word
