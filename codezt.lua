@@ -242,6 +242,16 @@ word_array["%"] = function()
   checktype(p2,"number","%")
   push({"number",p2[2]%p1[2]})
 end
+word_array["%*"] = function()
+  p1 = pop()
+  p2 = pop()
+  checktype(p1,"number","%*")
+  checktype(p2,"number","%*")
+  p3 = p2[2]*(1/p1[2])
+  p3 = (p3 - math.floor(p3)) * p1[2]
+  push({"number",p3})
+end
+
 
 word_array["*"] = function()
   p1 = pop()
@@ -557,7 +567,7 @@ function run_line(line)
           collect = {}
           end_expected = 0
         else
-          if(word == "if" or word=="repeat" or word=="fourloop") then
+          if(word == "if" or word=="repeat" or word=="fourloop" or word=="if2") then
             end_expected = end_expected + 1
           end
           collect[#collect+1]=word
