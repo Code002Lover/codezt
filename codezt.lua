@@ -14,7 +14,7 @@ local pri_ptr = print
 local linecount = 0
 local i = 0
 function error(bool,...)
-  pri_ptr("[ERROR]",...)
+  io.stderr:write("[ERROR]\t",...,"\n")
   if(not bool) then
     os.exit(1)
   end
@@ -418,8 +418,9 @@ word_array["switch"] = function()
 end
 
 word_array["="] = function()
+  warn("the word `=` is deprecated as of 17/02/2022 and will be removed in the future")
   set_value = true
-end
+end --TODO: remove `=` as it's dumb af
 
 word_array["set"] = function()
   p1 = pop()
@@ -432,7 +433,7 @@ end
 word_array["clear"] = function()
   stack={}
   last=0
-end
+end --idk why anyone would want to use this
 
 word_array["func"] = function()
   collect = {"func"}
@@ -446,7 +447,7 @@ word_array["fourloop"] = function()
   collect = {"fourloop"}
 end
 
-word_array["ifl"] = word_array["repeat"]
+word_array["ifl"] = word_array["repeat"] --if loop
 
 word_array["if"] = function()
   p1 = pop()
