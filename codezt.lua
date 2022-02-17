@@ -31,6 +31,9 @@ end
 
 local args = arg
 local input_filename = args[1]
+local pop_on_replacing_set = args[2] == "true"
+local ingore_unknown_end = args[3] == "true"
+--TODO: check args in a better way
 
 assert(input_filename~=nil,"no input filename specified")
 local input_file
@@ -286,6 +289,7 @@ word_array["call"] = function()
 end
 
 word_array["end"] = function()
+  if(ingore_unknown_end) then return end
   error(false,"unknown `end` found")
 end
 
@@ -428,16 +432,26 @@ word_array["switch"] = function()
 end
 
 word_array["="] = function()
-  warn("the word `=` is deprecated as of 17/02/2022 and will be removed in the future")
+  warn("the word `=` is deprecated as of 17/02/2022 and will be removed in the near future")
   set_value = true
 end --TODO: remove `=` as it's dumb af
 
 word_array["set"] = function()
   p1 = pop()
-  if(values[last_word]) then
+  if(values[last_word] and pop_on_replacing_set) then
     pop()
   end
   values[last_word]=p1[2]
+  --[[--
+  examples:
+    a 1 set
+    [1]:
+      a a ++ set
+    [2]:
+      x a ++ set
+    [3]:
+      null a ++ set
+  --]]--
 end
 
 word_array["clear"] = function()
@@ -579,7 +593,6 @@ function run_line(line)
           set_value = false
         else
           push({"number",tonumber(word)})
-          --TODO: add support for huge numbers, or at least handle them as strings (BigNum)
         end
       else
         if(word_array[word])then
