@@ -13,9 +13,11 @@ local err_ptr = error
 local pri_ptr = print
 local linecount = 0
 local i = 0
-function error(...)
+function error(bool,...)
   pri_ptr("[ERROR]",...)
-  os.exit(1)
+  if(not bool) then
+    os.exit(1)
+  end
 end
 function info(...)
   pri_ptr("[INFO]",...)
@@ -103,9 +105,9 @@ function checktype(tocheck,expected,word_error,custom_error)
   end
   if(tocheck~=expected) then
     if(custom_error) then
-      return error(word_error)
+      return error(false,word_error)
     end
-    error(concat({"`",word_error,"` expects type `",expected,"` but got type `",tocheck,"`"}))
+    error(false,concat({"`",word_error,"` expects type `",expected,"` but got type `",tocheck,"`"}))
   end
 end
 
@@ -274,7 +276,7 @@ word_array["call"] = function()
 end
 
 word_array["end"] = function()
-  error("unknown `end` found")
+  error(false,"unknown `end` found")
 end
 
 word_array["httpget"] = function()
@@ -393,6 +395,10 @@ word_array["and"] = function()
   push({"bool",p1[2]and p2[2]})
 end
 word_array["&&"] = word_array["and"]
+
+word_array["error"] = function()
+  error(true,pop()[2])
+end
 
 word_array["or"] = function()
   p1 = pop()
