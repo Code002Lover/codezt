@@ -459,6 +459,18 @@ word_array["switch"] = function()
   push(p2)
 end
 
+word_array["loadstring"] = function()
+  p1 = pop()
+  checktype(p1,"string","loadstring")
+  run_line(split(p1[2]))
+end
+word_array["runstring"] = word_array["loadstring"]
+word_array["executestring"] = word_array["loadstring"]
+word_array["eval"] = word_array["loadstring"]
+
+
+
+
 word_array["set"] = function()
   p1 = pop()
   if(values[last_word] and pop_on_replacing_set) then
