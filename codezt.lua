@@ -55,6 +55,7 @@ local types = {
   ["string"       ] = true,
   ["table"        ] = true,
   ["char"         ] = true,
+  ["file"         ] = true,
 }
 
 local stack  = {}
@@ -468,7 +469,22 @@ word_array["runstring"] = word_array["loadstring"]
 word_array["executestring"] = word_array["loadstring"]
 word_array["eval"] = word_array["loadstring"]
 
+word_array["open_file"] = function()
+  p1 = pop() --filepath
+  p2 = unsafe_pop()--mode
+  checktype(p1,"string","open_file")
+  if(p2[1]=="nil") then
+    p2 = {"char","r"}
+  end
+  checktype(p2,"char","open_file")
+  push({"file",io.open(p1[2],p2[2])})
+end
 
+word_array["read_line"] = function()
+  p1 = pop() --file
+  checktype(p1,"file","read_line")
+  handle_string(p1[2]:read("*line"))
+end
 
 
 word_array["set"] = function()
@@ -556,6 +572,10 @@ word_array["pow"] = function()
 end
 
 function handle_string(str)
+  if(str == nil or tostring(str) == "nil") then
+    push({"nil","nil"})
+    return
+  end
   str = tostring(string.gsub(str,"\\n","\n"))
   str = tostring(string.gsub(str,"\\t","\t"))
   str = tostring(string.gsub(str,"\\r","\r"))
