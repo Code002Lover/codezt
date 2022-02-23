@@ -168,7 +168,11 @@ end
 word_array["+"] = function()
   p1 = pop()
   p2 = pop()
-  push({"number",(p1[1]=="number" and p2[1]=="number" and p2[2]+p1[2]) or p2[2]..p1[2]}) --`..` could be changed to a table concat in order for better performance
+  if(p1[1]=="number") then
+    push({"number",p1[2]+p2[2]})
+  else
+    handle_string(p2[2]..p1[2])
+  end
 end
 
 word_array["add"] = function()
@@ -555,7 +559,11 @@ function handle_string(str)
   str = tostring(string.gsub(str,"\\a","\a"))
   str = tostring(string.gsub(str,"\\b","\b"))
   str = tostring(string.gsub(str,"\\v","\v"))
-  push({"string",str})
+  if(#str == 1) then
+    push({"char",str})
+  else
+    push({"string",str})
+  end
 end
 
 function run_line(line)
