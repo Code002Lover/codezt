@@ -499,7 +499,13 @@ word_array["fourloop"] = function()
   collect = {"fourloop"}
 end
 
-word_array["ifl"] = word_array["repeat"] --if loop
+word_array["ifl"] = function()
+  p1 = pop()
+  checktype(p1,"bool","if-loop")
+  if(p1[2]) then
+    word_array["repeat"]()
+  end
+end
 
 word_array["if"] = function()
   p1 = pop()
