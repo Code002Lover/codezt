@@ -26,3 +26,20 @@ end
 func isEven
   dup 2 % 0 ==
 end
+
+func readfile
+  {}
+  switch
+  repeat
+    dup
+    read_line
+    dup nil !=
+    4 on-stack
+    rot
+    switch
+    add
+    rot
+    rot
+  end
+  drop
+end
