@@ -172,6 +172,7 @@ word_array["+"] = function()
 end
 
 word_array["add"] = function()
+  --p1 is table, p2 is value
   p1 = pop()
   if(p1[1]=="number" or p1[1] == "string") then
     push(p1)
@@ -182,6 +183,14 @@ word_array["add"] = function()
   p2 = pop()
   p1[2][#p1[2]+1] = p2
   push(p1)
+end
+
+word_array["remove"] = function()
+  p1 = pop()
+  checktype(p1,"table","remove")
+  p2 = table.remove(p1[2], #p1[2])
+  push(p1)
+  push(p2)
 end
 
 word_array["{}"] = function()
@@ -318,9 +327,14 @@ end
 word_array["print"] = function()
   p1 = pop()
   if(p1[1]=="table") then
+    p2 = {}
     for i=1,#p1[2] do
-      print(p1[2][i][2])
+      p2[#p2+1] = p1[2][i][2]
     end
+    print(concat({"{ ",concat(p2,",")," }"}))
+    -- for i=1,#p1[2] do
+    --   print(p1[2][i][2])
+    -- end
     return
   end
   print(p1[2])
