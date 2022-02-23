@@ -459,27 +459,12 @@ word_array["switch"] = function()
   push(p2)
 end
 
-word_array["="] = function()
-  warn("the word `=` is deprecated as of 17/02/2022 and will be removed in the near future")
-  set_value = true
-end --TODO: remove `=` as it's dumb af
-
 word_array["set"] = function()
   p1 = pop()
   if(values[last_word] and pop_on_replacing_set) then
     pop()
   end
   values[last_word]=p1[2]
-  --[[--
-  examples:
-    a 1 set
-    [1]:
-      a a ++ set
-    [2]:
-      x a ++ set
-    [3]:
-      null a ++ set
-  --]]--
 end
 
 word_array["clear"] = function()
