@@ -486,6 +486,13 @@ word_array["read_line"] = function()
   handle_string(p1[2]:read("*line"))
 end
 
+word_array["write_file"] = function()
+  p1 = pop() --file
+  p2 = pop() --text
+  checktype(p1,"file","write_file")
+  checktype(p2,"string","write_file")
+  p1[2]:write(p2[2])
+end
 
 word_array["set"] = function()
   p1 = pop()
@@ -608,7 +615,11 @@ function run_line(line)
       end
       if(#collect~= 0) then
         if(word == "end") then end_expected = end_expected - 1 end
-        if(word == "end" and ((end_expected == -1 and collect[1] == "func") or (collect[1]=="ignore-if") or (collect[1]=="repeat" or collect[1]=="fourloop"))) then
+        if(word == "end" and (
+          (end_expected == -1 and collect[1] == "func") or
+          (collect[1]=="ignore-if") or (collect[1]=="repeat" or collect[1]=="fourloop")
+          )
+        ) then
           if(collect[1]=="func") then
             table.remove(collect,1)--func
             p1 = table.remove(collect,1)
@@ -636,7 +647,7 @@ function run_line(line)
           collect = {}
           end_expected = 0
         else
-          if(word == "if" or word=="repeat" or word=="fourloop" or word=="if2") then
+          if(word == "if" or word=="repeat" or word=="fourloop" or word=="if2" or word=="ifl") then
             end_expected = end_expected + 1
           end
           collect[#collect+1]=word
