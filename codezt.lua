@@ -28,6 +28,11 @@ end
 function print(...)
   pri_ptr(...)
 end
+function assert(cond,msg)
+  if(not cond) then
+    error(false,msg)
+  end
+end
 
 local args = arg
 local input_filename = args[1]
@@ -48,7 +53,8 @@ local types = {
   ["bool"         ] = true,
   ["function_ptr" ] = true,
   ["string"       ] = true,
-  ["table"        ] = true
+  ["table"        ] = true,
+  ["char"         ] = true,
 }
 
 local stack  = {}
@@ -426,7 +432,11 @@ word_array["!!"] = show_stack
 
 word_array["switch"] = function()
   p1 = pop()
-  p2 = pop()
+  p2 = unsafe_pop()
+  if(p2[1] == "nil") then
+    push(p1)
+    return
+  end
   push(p1)
   push(p2)
 end
