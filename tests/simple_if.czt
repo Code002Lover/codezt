@@ -1,0 +1,9 @@
+true if
+"yes" print
+end
+"no" print
+
+false if
+"yes" print
+end
+"no" print
