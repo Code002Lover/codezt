@@ -43,3 +43,8 @@ func readfile
   end
   drop
 end
+
+func getLastTableElement
+  dup type "table" == assert
+  remove dup rot rot switch add switch
+end
