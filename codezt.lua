@@ -162,12 +162,16 @@ local function run_line(line)
           collect_string = {}
         end
       end
-      if(#collect~= 0) then
-        if(word == "end") then end_expected = end_expected - 1 end
-        if(word == "end" and (
-          (end_expected == -1 and collect[1] == "func") or
-          (collect[1]=="ignore-if") or (collect[1]=="repeat" or collect[1]=="fourloop")
-          )
+      if(#collect~=0) then
+        if(word == "end") then
+          end_expected = end_expected - 1
+        end
+        if(word == "end" and
+            (
+              (end_expected == -1 and collect[1] == "func") or
+              (collect[1]=="ignore-if") or (collect[1]=="repeat" or collect[1]=="fourloop") or
+              (collect[1]=="execute-if")
+            )
         ) then
           if(collect[1]=="func") then
             table.remove(collect,1)--func
@@ -181,6 +185,12 @@ local function run_line(line)
             for _=1,4 do
               run_line(code_to_run)
             end
+          end
+          if(collect[1]=="execute-if") then
+            table.remove(collect,1)--execute-if
+            local code_to_run = split(concat(collect," "))
+            collect = {}
+            run_line(code_to_run)
           end
           if(collect[1]=="repeat") then
             table.remove(collect,1)--repeat
@@ -494,9 +504,9 @@ word_array["print"] = function()
   p1 = pop()
   if(p1[1]=="table") then
     print(tbl2str(p1[2]))
-    return
+  else
+    print(p1[2])
   end
-  print(p1[2])
 end
 
 word_array["debug"] = function()
@@ -684,7 +694,12 @@ end
 word_array["if"] = function()
   p1 = pop()
   checktype(p1,"bool","if")
-  collect = (not(p1[2]==true) and {"ignore-if"}) or {}
+  if(not p1[2]) then --ignore it if its false
+    collect = {"ignore-if"}
+  else
+    collect = {"execute-if"}
+  end
+  --collect = (not(p1[2]==true) and {"ignore-if"}) or {} --?
 end
 
 word_array["include"] = function()
