@@ -1,7 +1,7 @@
 local concat,sub = table.concat,string.sub
 
 local tbl = {}
-function split(str)
+local function split(str)
    tbl = {}
    for i=1,#str do
      tbl[#tbl+1] = sub(str,i,i)
@@ -9,26 +9,24 @@ function split(str)
    return tbl
 end
 
-local err_ptr = error
 local pri_ptr = print
 local linecount = 0
-local i = 0
-function error(bool,...)
+local function error(bool,...)
   io.stderr:write("[ERROR]\t",...,"\n")
   if(not bool) then
     os.exit(1)
   end
 end
-function info(...)
+local function info(...)
   pri_ptr("[INFO]",...)
 end
-function warn(...)
+local function warn(...)
   pri_ptr("[WARN]",...)
 end
-function print(...)
+local function print(...)
   pri_ptr(...)
 end
-function assert(cond,msg)
+local function assert(cond,msg)
   if(not cond) then
     error(false,msg)
   end
@@ -38,6 +36,7 @@ local args = arg
 local input_filename = args[1]
 local pop_on_replacing_set = args[2] == "true"
 local ingore_unknown_end = args[3] == "true"
+local ENABLE_HTTP = args[4] == "true"
 --TODO: check args in a better way
 
 assert(input_filename~=nil,"no input filename specified")
@@ -60,13 +59,13 @@ local types = {
 
 local stack  = {}
 local last = 0
-function push(t)
+local function push(t)
   assert(type(t)=="table" and #t==2,"interpreter error when pushing")
   assert(types[t[1]]==true,"unknown type got pushed")
   last = last + 1
   stack[last]=t
 end
-function pop(position)
+local function pop(position)
   assert(last~=0,"no items to pop from stack")
   assert(position==nil or last >= position,"not enough items on the stack")
   last = last - 1
@@ -75,40 +74,43 @@ function pop(position)
   end
   return stack[last+1] or {"nil","nil"}
 end
-function unsafe_pop()
+local function unsafe_pop()
   return (last~= 0 and pop()) or {"nil","nil"}
 end
 
-function show_stack()
+local function show_stack()
   local str = {""}
   str[#str+1] = concat({"number of elements on the stack:",last},"\t")
 
   if(last ~= 0) then
     str[#str+1] = "elements on the stack:"
-    for i=1,last do
-      str[#str+1] = concat({"type:",stack[i][1],"value:",tostring(stack[i][2])},"\t")
+    for j=1,last do
+      str[#str+1] = concat({"type:",stack[j][1],"value:",tostring(stack[j][2])},"\t")
     end
   end
   print(concat(str,"\n[INFO]\t"))
 end
 
+local p1,p2,p3
 local values = {}
 local functions = {}
-local while_loops = {}
 local set_value = false
 local last_word = ""
 local collect = {}
 local end_expected = 0
 local collect_string = {}
-local http = require("socket.http")
-function lshift(x, by)
+local http
+if(ENABLE_HTTP) then
+  http = require("socket.http")
+end
+local function lshift(x, by)
   return x * 2 ^ by
 end
-function rshift(x, by)
+local function rshift(x, by)
   return math.floor(x / 2 ^ by)
 end
 
-function checktype(tocheck,expected,word_error,custom_error)
+local function checktype(tocheck,expected,word_error,custom_error)
   assert(tocheck~=nil and expected~=nil and word_error~=nil,"checktype expects arguments")
   if(type(tocheck)=="table") then
     return checktype(tocheck[1],expected,word_error,custom_error)
@@ -121,13 +123,150 @@ function checktype(tocheck,expected,word_error,custom_error)
   end
 end
 
+local function handle_string(str)
+  if(str == nil or tostring(str) == "nil") then
+    push({"nil","nil"})
+    return
+  end
+  str = tostring(string.gsub(str,"\\n","\n"))
+  str = tostring(string.gsub(str,"\\t","\t"))
+  str = tostring(string.gsub(str,"\\r","\r"))
+  str = tostring(string.gsub(str,"\\a","\a"))
+  str = tostring(string.gsub(str,"\\b","\b"))
+  str = tostring(string.gsub(str,"\\v","\v"))
+  if(#str == 1) then
+    push({"char",str})
+  else
+    push({"string",str})
+  end
+end
+
 local word_array = {}
+local word
+local collection
+
+local function run_line(line)
+  for i=1,#line+1 do
+    if(line[i] == " " or line[i]==nil or line[i]=="\n" or line[i]=="\t" or line[i]=="" or line[i]==";") then
+      word = concat(collection)
+      collection = {}
+      if(values[word]) then
+        last_word = word
+        word = values[word]
+      end
+      if(#collect_string ~= 0) then
+        collect_string[#collect_string+1]=word
+        if(sub(word,#word,#word) == '"' or word=='"' or word==' "') then
+          p1 = concat(collect_string," ")
+          handle_string(sub(p1,1,#p1-1))
+          collect_string = {}
+        end
+      end
+      if(#collect~= 0) then
+        if(word == "end") then end_expected = end_expected - 1 end
+        if(word == "end" and (
+          (end_expected == -1 and collect[1] == "func") or
+          (collect[1]=="ignore-if") or (collect[1]=="repeat" or collect[1]=="fourloop")
+          )
+        ) then
+          if(collect[1]=="func") then
+            table.remove(collect,1)--func
+            p1 = table.remove(collect,1)
+            functions[p1] = split(concat(collect," ")) --without funcname nor end
+          end
+          if(collect[1]=="fourloop") then
+            table.remove(collect,1)--fourloop
+            local code_to_run = split(concat(collect," "))
+            collect = {}
+            for _=1,4 do
+              run_line(code_to_run)
+            end
+          end
+          if(collect[1]=="repeat") then
+            table.remove(collect,1)--repeat
+            local code_to_run = split(concat(collect," "))
+            collect = {}
+            p2 = nil
+            repeat
+              run_line(code_to_run)
+              p2 = pop()
+              checktype(p2,"bool","top of the stack after a `repeat` must be of type boolean",true)
+            until p2[2]~=true
+          end
+          collect = {}
+          end_expected = 0
+        else
+          if(word == "if" or word=="repeat" or word=="fourloop" or word=="if2" or word=="ifl") then
+            end_expected = end_expected + 1
+          end
+          collect[#collect+1]=word
+        end
+        word = {}
+      elseif(tonumber(word)~=nil) then
+        if(set_value) then
+          values[last_word]=word
+          set_value = false
+        else
+          push({"number",tonumber(word)})
+        end
+      else
+        if(word_array[word])then
+          word_array[word]()
+        elseif(sub(word,1,1)=='"' and sub(word,#word,#word) ~= '"') then
+          collect_string = {sub(word,2,#word+1)}
+        elseif(sub(word,1,1)=='"' and sub(word,#word,#word) == '"') then
+            handle_string(sub(word,2,#word-1))
+        elseif(sub(word,1,2)=="//" or word=="return") then
+          break
+        elseif(functions[sub(word,1,#word-2)]) then
+          run_line(functions[sub(word,1,#word-2)])
+        elseif(functions[word]) then
+          push({"function_ptr",word})
+        else
+          last_word = word
+        end
+      end
+    else
+      collection[#collection+1] = line[i]
+    end
+  end
+end
+
+local function run_file(file)
+  local line = ""
+  while line ~= nil do
+    line = file:read("*line")
+    linecount = linecount + 1
+    if(line == nil)then break end --EOF
+
+    line = split(line)
+    collection = {}
+    run_line(line)
+  end
+end
+if(input_filename == "dump_words") then
+  local t = {}
+  for i,_ in pairs(word_array) do
+    t[#t+1]=i
+  end
+  print(table.concat(t, "|"))
+  return
+end
+
+
+
+
+
+
+
+
 
 word_array["exit"] = function()
   p1 = pop()
   checktype(p1,"number","exit")
   os.exit(p1[2])
 end
+
 word_array["rot"] = function()
   push({"number",3})
   word_array["on-stack"]()
@@ -179,15 +318,24 @@ end
 word_array["add"] = function()
   --p1 is table, p2 is value
   p1 = pop()
-  if(p1[1]=="number" or p1[1] == "string") then
+  p2 = pop()
+  if((p1[1]=="number" or p1[1] == "string") and (p2[1]=="number" or p2[1] == "string")) then
     push(p1)
+    push(p2)
     word_array["+"]()
     return
   end
-  assert(p1[1]=="table","'add' can only be used with types: `number` `string` `table`")
-  p2 = pop()
-  p1[2][#p1[2]+1] = p2
-  push(p1)
+  assert(p1[1]=="table" or p2[1]=="table","'add' can only be used with types: `number` `string` `table`")
+  if(p1[1]=="table") then
+    p1[2][#p1[2]+1] = p2
+    push(p1)
+    return
+  end
+  if(p2[1]=="table") then
+    p2[2][#p2[2]+1] = p1
+    push(p2)
+    return
+  end
 end
 
 word_array["remove"] = function()
@@ -314,6 +462,7 @@ word_array["end"] = function()
 end
 
 word_array["httpget"] = function()
+  assert(ENABLE_HTTP,"http is disabled")
   local body, code, headers, status = http.request(pop()[2])
   push({"string",status})
   push({"table",headers})
@@ -329,17 +478,22 @@ word_array["unsafe_drop"] = function()
   unsafe_pop()
 end
 
+local function tbl2str(tabl)
+  local str = "{"
+  for i=1,#tabl do
+    if(tabl[i][1]=="table") then
+      tabl[i] = {"string",tbl2str(tabl[i][2])} --the [2] is because of how its stored
+    end
+    str = concat({str,tabl[i][2],(#tabl ~= i and ",") or ("")})
+  end
+  str = concat({str,"}"})
+  return str
+end
+
 word_array["print"] = function()
   p1 = pop()
   if(p1[1]=="table") then
-    p2 = {}
-    for i=1,#p1[2] do
-      p2[#p2+1] = p1[2][i][2]
-    end
-    print(concat({"{ ",concat(p2,",")," }"}))
-    -- for i=1,#p1[2] do
-    --   print(p1[2][i][2])
-    -- end
+    print(tbl2str(p1[2]))
     return
   end
   print(p1[2])
@@ -578,133 +732,13 @@ word_array["pow"] = function()
   push({"number"},math.pow(p2[2],p1[2]))
 end
 
-function handle_string(str)
-  if(str == nil or tostring(str) == "nil") then
-    push({"nil","nil"})
-    return
-  end
-  str = tostring(string.gsub(str,"\\n","\n"))
-  str = tostring(string.gsub(str,"\\t","\t"))
-  str = tostring(string.gsub(str,"\\r","\r"))
-  str = tostring(string.gsub(str,"\\a","\a"))
-  str = tostring(string.gsub(str,"\\b","\b"))
-  str = tostring(string.gsub(str,"\\v","\v"))
-  if(#str == 1) then
-    push({"char",str})
-  else
-    push({"string",str})
+word_array["assert"] = function()
+  p1 = pop()
+  if(p1[2]~=true) then
+    error(true,"assertion failed")
   end
 end
 
-function run_line(line)
-  for i=1,#line+1 do
-    if(line[i] == " " or line[i]==nil or line[i]=="\n" or line[i]=="\t" or line[i]=="" or line[i]==";") then
-      word = concat(collection)
-      collection = {}
-      if(values[word]) then
-        last_word = word
-        word = values[word]
-      end
-      if(#collect_string ~= 0) then
-        collect_string[#collect_string+1]=word
-        if(sub(word,#word,#word) == '"' or word=='"' or word==' "') then
-          p1 = concat(collect_string," ")
-          handle_string(sub(p1,1,#p1-1))
-          collect_string = {}
-        end
-      end
-      if(#collect~= 0) then
-        if(word == "end") then end_expected = end_expected - 1 end
-        if(word == "end" and (
-          (end_expected == -1 and collect[1] == "func") or
-          (collect[1]=="ignore-if") or (collect[1]=="repeat" or collect[1]=="fourloop")
-          )
-        ) then
-          if(collect[1]=="func") then
-            table.remove(collect,1)--func
-            p1 = table.remove(collect,1)
-            functions[p1] = split(concat(collect," ")) --without funcname nor end
-          end
-          if(collect[1]=="fourloop") then
-            table.remove(collect,1)--fourloop
-            local code_to_run = split(concat(collect," "))
-            collect = {}
-            for i=1,4 do
-              run_line(code_to_run)
-            end
-          end
-          if(collect[1]=="repeat") then
-            table.remove(collect,1)--repeat
-            local code_to_run = split(concat(collect," "))
-            collect = {}
-            p2 = nil
-            repeat
-              run_line(code_to_run)
-              p2 = pop()
-              checktype(p2,"bool","top of the stack after a `repeat` must be of type boolean",true)
-            until p2[2]~=true
-          end
-          collect = {}
-          end_expected = 0
-        else
-          if(word == "if" or word=="repeat" or word=="fourloop" or word=="if2" or word=="ifl") then
-            end_expected = end_expected + 1
-          end
-          collect[#collect+1]=word
-        end
-        word = {}
-      elseif(tonumber(word)~=nil) then
-        if(set_value) then
-          values[last_word]=word
-          set_value = false
-        else
-          push({"number",tonumber(word)})
-        end
-      else
-        if(word_array[word])then
-          word_array[word]()
-        elseif(sub(word,1,1)=='"' and sub(word,#word,#word) ~= '"') then
-          collect_string = {sub(word,2,#word+1)}
-        elseif(sub(word,1,1)=='"' and sub(word,#word,#word) == '"') then
-            handle_string(sub(word,2,#word-1))
-        elseif(sub(word,1,2)=="//" or word=="return") then
-          break
-        elseif(functions[sub(word,1,#word-2)]) then
-          run_line(functions[sub(word,1,#word-2)])
-        elseif(functions[word]) then
-          push({"function_ptr",word})
-        else
-          last_word = word
-        end
-      end
-    else
-      collection[#collection+1] = line[i]
-    end
-  end
-end
-
-
-
-function run_file(file)
-  local line = ""
-  while line ~= nil do
-    line = file:read("*line")
-    linecount = linecount + 1
-    if(line == nil)then break end --EOF
-
-    line = split(line)
-    collection = {}
-    run_line(line)
-  end
-end
-if(input_filename == "dump_words") then
-  local t = {}
-  for i,v in pairs(word_array) do
-    t[#t+1]=i
-  end
-  print(table.concat(t, "|"))
-  return
-end
 local start = os.clock()
 run_file(input_file)
 if(last ~= 0) then
