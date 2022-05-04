@@ -91,6 +91,37 @@ local function show_stack()
   print(concat(str,"\n[INFO]\t"))
 end
 
+local function BitXOR(a,b)--Bitwise xor
+    local p,c=1,0
+    while a>0 and b>0 do
+        local ra,rb=a%2,b%2
+        if ra~=rb then c=c+p end
+        a,b,p=(a-ra)/2,(b-rb)/2,p*2
+    end
+    if a<b then a=b end
+    while a>0 do
+        local ra=a%2
+        if ra>0 then c=c+p end
+        a,p=(a-ra)/2,p*2
+    end
+    return c
+end
+
+local function StrXOR(a,b)
+  local alen = #a
+  local blen = #b
+  local ret = {}
+  local char = string.char
+  for i=1,alen do
+    ret[i]=a:byte(i)
+    for j=1,blen do
+      ret[i]=BitXOR(ret[i],b:byte(j))
+    end
+    ret[i] = char(ret[i])
+  end
+  return table.concat(ret)
+end
+
 local p1,p2,p3
 local values = {}
 local functions = {}
@@ -269,7 +300,17 @@ end
 
 
 
+word_array["^"] = function()
+  p1 = pop()
+  p2 = pop()
+  if(p1[1]=="string" and p2[1]=="string") then
+    push({"string",StrXOR(p2[2],p1[2])})
+  else
+    push({"number"},BitXOR(p2[2],p1[2]))
+  end
+end
 
+word_array["xor"] = word_array["^"]
 
 word_array["exit"] = function()
   p1 = pop()
