@@ -1,0 +1,7 @@
+func a
+  "works" print
+end
+
+a "b" as
+
+b()
