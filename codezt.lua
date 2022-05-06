@@ -207,6 +207,7 @@ local function run_line(line)
           if(collect[1]=="func") then
             table.remove(collect,1)--func
             p1 = table.remove(collect,1)
+            info("creating function called",p1)
             functions[p1] = split(concat(collect," ")) --without funcname nor end
           end
           if(collect[1]=="fourloop") then
@@ -259,10 +260,10 @@ local function run_line(line)
             handle_string(sub(word,2,#word-1))
         elseif(sub(word,1,2)=="//" or word=="return") then
           break
-        elseif(functions[sub(word,1,#word-2)]) then
-          run_line(functions[sub(word,1,#word-2)])
         elseif(functions[word]) then
           push({"function_ptr",word})
+        elseif(functions[sub(word,1,#word-2)]) then
+          run_line(functions[sub(word,1,#word-2)])
         else
           last_word = word
         end
@@ -294,11 +295,18 @@ if(input_filename == "dump_words") then
   return
 end
 
+local DEBUG_TYPE_INFO = false
 
+word_array["toggle-debugging"] = function()
+  DEBUG_TYPE_INFO = not DEBUG_TYPE_INFO
+end
 
-
-
-
+word_array["as"] = function()
+  p1 = pop()
+  p2 = pop()
+  --p2 should also be known as p1 from now on
+  functions[p1[2]] = functions[p2[2]]
+end
 
 word_array["^"] = function()
   p1 = pop()
@@ -309,7 +317,6 @@ word_array["^"] = function()
     push({"number"},BitXOR(p2[2],p1[2]))
   end
 end
-
 word_array["xor"] = word_array["^"]
 
 word_array["exit"] = function()
@@ -546,6 +553,9 @@ word_array["print"] = function()
   if(p1[1]=="table") then
     print(tbl2str(p1[2]))
   else
+    if(DEBUG_TYPE_INFO) then
+      info(p1[1])
+    end
     print(p1[2])
   end
 end
