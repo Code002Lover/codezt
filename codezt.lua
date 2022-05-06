@@ -207,7 +207,6 @@ local function run_line(line)
           if(collect[1]=="func") then
             table.remove(collect,1)--func
             p1 = table.remove(collect,1)
-            info("creating function called",p1)
             functions[p1] = split(concat(collect," ")) --without funcname nor end
           end
           if(collect[1]=="fourloop") then
